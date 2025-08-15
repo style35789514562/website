@@ -1,0 +1,497 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>八部金剛功 - 計時器（完整版）</title>
+    <style>
+        :root {
+            --bg: #071026;
+            --card: #0b1220;
+            --accent: #7dd3fc;
+            --muted: #94a3b8
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui,-apple-system,'Noto Sans TC','Microsoft JhengHei',sans-serif
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg,#071026 0%,#071821 100%);
+            color: #e6eef6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px
+        }
+
+        .container {
+            width: 980px;
+            max-width: 100%;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 6px 24px rgba(2,6,23,0.6)
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 22px
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        label.small {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 8px;
+            margin-top: 8px
+        }
+
+        input[type=number] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: transparent;
+            color: inherit
+        }
+
+        .btn {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 0;
+            cursor: pointer;
+            user-select: none
+        }
+
+            .btn.primary {
+                background: linear-gradient(90deg,#06b6d4,#60a5fa);
+                color: #052133
+            }
+
+            .btn.ghost {
+                background: transparent;
+                border: 1px solid rgba(255,255,255,0.06);
+                color: var(--accent)
+            }
+
+        .stage {
+            display: none
+        }
+
+            .stage.active {
+                display: block;
+                margin-top: 10px
+            }
+
+        .topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .part-name {
+            font-size: 18px;
+            font-weight: 700
+        }
+
+        .timer-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: conic-gradient(var(--accent) 0deg, rgba(255,255,255,0.03) 0deg);
+            box-shadow: inset 0 -6px 20px rgba(0,0,0,0.55)
+        }
+
+        .time-text {
+            font-size: 34px;
+            font-weight: 700
+        }
+
+        .meta {
+            flex: 1;
+            margin-left: 12px;
+            text-align: left
+        }
+
+            .meta .label {
+                font-size: 13px;
+                color: var(--muted)
+            }
+
+        .controls-horizontal {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 12px
+        }
+
+            .controls-horizontal .btn {
+                flex: 1;
+                min-width: 0;
+            }
+
+        .video-placeholder {
+            margin-top: 12px;
+            height: 160px;
+            background: #0b1220;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 14px
+        }
+
+        @media(max-width:720px) {
+            .grid {
+                grid-template-columns: repeat(2,1fr)
+            }
+
+            .timer-circle {
+                width: 140px;
+                height: 140px
+            }
+
+            .time-text {
+                font-size: 28px
+            }
+
+            .video-placeholder {
+                height: 120px
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card stage active" id="page-setup">
+            <h1>八部金剛功 — 設定</h1>
+            <div class="row" style="margin-top:6px">
+                <label class="small" style="width:160px">請輸入每部要幾遍（套用於 8 部）</label>
+                <input id="input-reps" type="number" min="1" value="7" style="max-width:120px">
+            </div>
+            <div class="row" style="margin-top:8px">
+                <label class="small" style="width:160px">暖身秒數（每部開始前）</label>
+                <input id="input-warm" type="number" min="0" value="5" style="max-width:120px">
+            </div>
+            <div style="margin-top:10px">
+                <label class="small">請設定 10 欄秒數（從 起式 → 第一部 ... 第八部 → 收式）</label>
+                <div class="grid" id="part-times"></div>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:10px; align-items:center">
+                <button class="btn primary" id="start-btn">開始</button>
+                <button class="btn ghost" id="reset-btn">重設</button>
+                <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+                    <label class="small">提示音量</label>
+                    <input id="beep-volume" type="range" min="0" max="5" step="0.05" value="5">
+                    <label class="small">人聲音量</label>
+                    <input id="voice-volume" type="range" min="0" max="10" step="0.05" value="10">
+                </div>
+            </div>
+        </div>
+
+        <div class="card stage" id="page-run">
+            <div class="topline" style="flex-wrap:wrap;">
+                <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:180px;">
+                    <div class="part-name" id="display-part">起式</div>
+                    <div style="margin-top:6px;font-size:18px;font-weight:700;" id="display-stage">準備</div>
+                    <div style="margin-top:10px;font-size:14px;color:var(--muted)" id="meta-progress">第 0 / 10</div>
+                </div>
+                <div class="controls-horizontal" style="min-width:220px;">
+                    <button class="btn ghost" id="pause-btn">暫停</button>
+                    <button class="btn ghost" id="skip-btn">跳過</button>
+                    <button class="btn" id="end-btn" style="background:#ef4444;color:white">結束</button>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;align-items:center;flex-wrap:wrap">
+                <div class="timer-circle" id="timer-circle" aria-label="倒數計時">
+                    <div>
+                        <div class="small" style="text-align:center">倒數時間</div>
+                        <div class="time-text" id="time-remaining">00:00</div>
+                    </div>
+                </div>
+                <div style="flex:1;text-align:left; min-width:200px;">
+                    <div style="font-size:13px;color:var(--muted)">
+                    <!--（下方為該段的動畫區塊，未來可改為 &lt;video&gt; 或 iframe）-->
+                    </div>
+                    <div class="video-placeholder" id="video-slot">
+                    <!--影片區（每段可放動畫）-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const SEG_NAMES = ['起式', '第一部 雙手插頂利三焦', '第二部 手足前後固腎腰', '第三部 調理脾膚需單舉',
+                '第四部 左肝右肺如射雕', '第五部 回頭望足去心疾', '第六部 五勞七傷向後瞧', '第七部 鳳凰展翅周身力',
+                '第八部 兩足頓頓飲嗜消', '收式'];
+            const DEFAULT_SECONDS = [16, 15, 31, 21, 34, 26, 34, 34, 21, 24];
+
+            const pageSetup = document.getElementById('page-setup');
+            const pageRun = document.getElementById('page-run');
+            const partTimesEl = document.getElementById('part-times');
+            const inputReps = document.getElementById('input-reps');
+            const inputWarm = document.getElementById('input-warm');
+            const startBtn = document.getElementById('start-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const beepVolumeEl = document.getElementById('beep-volume');
+            const voiceVolumeEl = document.getElementById('voice-volume');
+            const displayPart = document.getElementById('display-part');
+            const displayStage = document.getElementById('display-stage');
+            const timeRemaining = document.getElementById('time-remaining');
+            const metaProgress = document.getElementById('meta-progress');
+            const timerCircle = document.getElementById('timer-circle');
+            const videoSlot = document.getElementById('video-slot');
+            const pauseBtn = document.getElementById('pause-btn');
+            const skipBtn = document.getElementById('skip-btn');
+            const endBtn = document.getElementById('end-btn');
+
+            let beepVolume = Number(beepVolumeEl.value);
+            let voiceVolume = Number(voiceVolumeEl.value);
+            let running = false, paused = false, stopRequested = false, skipFlag = false;
+            let currentIndex = 0, currentRep = 1;
+
+            const voiceAudioMap = {
+                '暖身': new Audio('audio/warmup.MP3'),
+                '結束': new Audio('audio/end.MP3'),
+                '第1遍': new Audio('audio/rep1.MP3'),
+                '第2遍': new Audio('audio/rep2.MP3'),
+                '第3遍': new Audio('audio/rep3.MP3'),
+                '第4遍': new Audio('audio/rep4.MP3'),
+                '第5遍': new Audio('audio/rep5.MP3'),
+                '第6遍': new Audio('audio/rep6.MP3'),
+                '第7遍': new Audio('audio/rep7.MP3'),
+                '第8遍': new Audio('audio/rep8.MP3'),
+                '第9遍': new Audio('audio/rep9.MP3'),
+                '3': new Audio('audio/count3.MP3'),
+                '2': new Audio('audio/count2.MP3'),
+                '1': new Audio('audio/count1.MP3'),
+                '起式': new Audio('audio/part0.MP3'),
+                '第一部 雙手插頂利三焦': new Audio('audio/part1.MP3'),
+                '第二部 手足前後固腎腰': new Audio('audio/part2.MP3'),
+                '第三部 調理脾膚需單舉': new Audio('audio/part3.MP3'),
+                '第四部 左肝右肺如射雕': new Audio('audio/part4.MP3'),
+                '第五部 回頭望足去心疾': new Audio('audio/part5.MP3'),
+                '第六部 五勞七傷向後瞧': new Audio('audio/part6.MP3'),
+                '第七部 鳳凰展翅周身力': new Audio('audio/part7.MP3'),
+                '第八部 兩足頓頓飲嗜消': new Audio('audio/part8.MP3'),
+                '收式': new Audio('audio/part9.MP3'),
+                '提示音': new Audio('audio/beep.MP3'),
+            };
+
+            function buildPartInputs() {
+                partTimesEl.innerHTML = '';
+                for (let i = 0; i < 10; i++) {
+                    const w = document.createElement('div');
+                    w.style.display = 'flex'; w.style.flexDirection = 'column';
+                    w.innerHTML = `
+                    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${SEG_NAMES[i]}</div>
+                    <input type="number" min="1" class="seg-time" data-index="${i}" value="${DEFAULT_SECONDS[i]}">
+                `;
+                    partTimesEl.appendChild(w);
+                }
+            }
+            buildPartInputs();
+
+            function readConfig() {
+                const reps = Math.max(1, Math.floor(Number(inputReps.value) || 1));
+                const warm = Math.max(0, Math.floor(Number(inputWarm.value) || 0));
+                const segEls = document.querySelectorAll('.seg-time');
+                const segSeconds = Array.from(segEls).map(e => Math.max(1, Math.floor(Number(e.value) || 1)));
+                return { reps, warm, segSeconds };
+            }
+
+            function saveConfig(cfg) { try { document.cookie = 'bp_cfg=' + encodeURIComponent(JSON.stringify(cfg)) + ';path=/'; } catch (e) { } }
+            function loadConfig() { try { const raw = document.cookie.split(';').map(s => s.trim()).find(p => p.startsWith('bp_cfg=')); return raw ? JSON.parse(decodeURIComponent(raw.split('=')[1])) : null; } catch (e) { return null; } }
+            function applyLoadedConfig() { const cfg = loadConfig(); if (!cfg) return; if (cfg.reps) inputReps.value = cfg.reps; if (cfg.warm !== undefined) inputWarm.value = cfg.warm; if (Array.isArray(cfg.segSeconds) && cfg.segSeconds.length === 10) { const segEls = document.querySelectorAll('.seg-time'); segEls.forEach((el, i) => el.value = cfg.segSeconds[i]); } }
+            applyLoadedConfig();
+
+            function formatTime(sec) { const m = Math.floor(sec / 60); const s = sec % 60; return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; }
+
+            function updateUI(remaining, total) {
+                displayPart.textContent = SEG_NAMES[currentIndex] || '';
+                timeRemaining.textContent = formatTime(remaining);
+                metaProgress.textContent = `第 ${currentIndex + 1} / 10`;
+                const deg = 360 * (remaining / total);
+                timerCircle.style.background = `conic-gradient(var(--accent) ${deg}deg, rgba(255,255,255,0.03) ${deg}deg)`;
+               /* videoSlot.textContent = `段落：${SEG_NAMES[currentIndex]}（這裡可放動畫或影片）`;*/
+            }
+
+            async function countdown(totalSeconds) {
+                for (let remaining = totalSeconds; remaining >= 1; remaining--) {
+                    if (stopRequested) return 'stopped';
+                    if (skipFlag) { skipFlag = false; return 'skipped'; }
+                    while (paused) { await new Promise(r => setTimeout(r, 200)); if (stopRequested) return 'stopped'; if (skipFlag) { skipFlag = false; return 'skipped'; } }
+                    updateUI(remaining, totalSeconds);
+                    if (remaining <= 3) {
+                        voiceAudioMap[remaining.toString()].volume = voiceVolume / 10;
+                        voiceAudioMap['提示音'].volume = beepVolume / 5;
+                        voiceAudioMap[remaining.toString()].play().catch(() => { });
+                        voiceAudioMap['提示音'].play().catch(() => { });
+                    }
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+                updateUI(0, totalSeconds);
+                return 'ok';
+            }
+
+            function playSegmentAudio(name) {
+                return new Promise(resolve => {
+                    const audio = voiceAudioMap[name];
+                    if (!audio) { resolve(); return; }
+                    audio.volume = voiceVolume / 10;
+                    audio.currentTime = 0;
+                    audio.play();
+                    audio.onended = () => resolve();
+                });
+            }
+
+            async function runTimer() {
+                running = true; paused = false; stopRequested = false; skipFlag = false;
+                currentIndex = 0;
+                updateUI(0, 1);
+
+                const cfg = readConfig();
+                saveConfig(cfg);
+
+                for (currentIndex = 0; currentIndex < 10; currentIndex++) {
+                    if (stopRequested) break;
+                    const segName = SEG_NAMES[currentIndex];
+                    const segTime = cfg.segSeconds[currentIndex];
+                    const reps = (currentIndex >= 1 && currentIndex <= 8) ? cfg.reps : 1;
+
+                    displayPart.textContent = segName;
+                    displayStage.textContent = '準備';
+                    metaProgress.textContent = `第 ${currentIndex + 1} / 10`;
+                    //videoSlot.textContent = `段落：${segName}（這裡可放動畫或影片）`;
+
+                    await playSegmentAudio(segName);
+                    if (stopRequested) break;
+
+                    // 暖身（只在第1~8部，起式與收式不暖身）
+                    if (currentIndex >= 1 && currentIndex <= 8 && cfg.warm > 0) {
+                        displayStage.textContent = '暖身';
+                        await playSegmentAudio('暖身');
+                        await countdown(cfg.warm);
+                    }
+
+                    if (currentIndex >= 1 && currentIndex <= 8) {
+                        for (currentRep = 1; currentRep <= reps; currentRep++) {
+                            if (stopRequested) break;
+                            displayStage.textContent = `第 ${currentRep} 遍`;
+                            const repAudioKey = `第${currentRep}遍`;
+                            if (voiceAudioMap[repAudioKey]) await playSegmentAudio(repAudioKey);
+                            await countdown(segTime);
+                        }
+                    } else {
+                        // 起式、收式直接倒數
+                        displayStage.textContent = '進行';
+                        await countdown(segTime);
+                    }
+                }
+
+                if (!stopRequested) await playSegmentAudio('結束');
+
+                pageRun.classList.remove('active');
+                pageSetup.classList.add('active');
+                running = false; paused = false; stopRequested = false; skipFlag = false;
+            }
+
+            startBtn.addEventListener('click', () => {
+                pageSetup.classList.remove('active');
+                pageRun.classList.add('active');
+                runTimer();
+            });
+            pauseBtn.addEventListener('click', () => { paused = !paused; pauseBtn.textContent = paused ? '繼續' : '暫停'; });
+            skipBtn.addEventListener('click', () => { skipFlag = true; });
+            endBtn.addEventListener('click', () => { stopRequested = true; });
+            resetBtn.addEventListener('click', () => { buildPartInputs(); });
+            beepVolumeEl.addEventListener('input', () => {
+                beepVolume = Number(beepVolumeEl.value);
+                saveVolumeConfig(); // 儲存
+                // 可加入提示音示範
+                const beepDemo = voiceAudioMap['提示音'];
+                if (beepDemo) {
+                    beepDemo.volume = beepVolume / 5;
+                    beepDemo.currentTime = 0;
+                    beepDemo.play().catch(() => { });
+                }
+            });
+
+            voiceVolumeEl.addEventListener('input', async () => {
+                voiceVolume = Number(voiceVolumeEl.value);
+                saveVolumeConfig(); // 儲存
+                // 播放 [第一部 雙手插頂利三焦] 示範
+                const demoAudio = voiceAudioMap['第一部 雙手插頂利三焦'];
+                if (demoAudio) {
+                    demoAudio.volume = voiceVolume / 10;
+                    demoAudio.currentTime = 0;
+                    demoAudio.play().catch(() => { });
+                }
+            });
+            // 儲存音量到 cookie
+            function saveVolumeConfig() {
+                const volCfg = {
+                    beep: Number(beepVolumeEl.value),
+                    voice: Number(voiceVolumeEl.value)
+                };
+                setCookie('bp_volume', JSON.stringify(volCfg), 365);
+            }
+
+            // 載入音量 cookie
+            function loadVolumeConfig() {
+                const raw = getCookie('bp_volume');
+                if (!raw) return;
+                try {
+                    const volCfg = JSON.parse(raw);
+                    if (volCfg.beep !== undefined) {
+                        beepVolumeEl.value = volCfg.beep;
+                        beepVolume = volCfg.beep;
+                    }
+                    if (volCfg.voice !== undefined) {
+                        voiceVolumeEl.value = volCfg.voice;
+                        voiceVolume = volCfg.voice;
+                    }
+                } catch { }
+            }
+            // Cookie helper
+            function setCookie(name, value, days = 365) {
+                const d = new Date();
+                d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+                document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/';
+            }
+
+            function getCookie(name) {
+                const pairs = document.cookie.split(';').map(s => s.trim());
+                for (const p of pairs) {
+                    if (p.startsWith(name + '=')) return decodeURIComponent(p.substring(name.length + 1));
+                }
+                return null;
+            }
+            // 初始化音量設定
+            loadVolumeConfig();
+        })();
+    </script>
+</body>
+</html>
