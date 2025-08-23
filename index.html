@@ -355,17 +355,45 @@
                 updateUI(0, totalSeconds);
                 return 'ok';
             }
+            function showError(msg) {
+    const errBox = document.getElementById('errorBox');
+    errBox.textContent += msg + "\n";
+    console.log(msg);
+}
 
-            function playSegmentAudio(name) {
-                return new Promise(resolve => {
-                    const audio = voiceAudioMap[name];
-                    if (!audio) { resolve(); return; }
-                    audio.volume = voiceVolume / 10;
-                    audio.currentTime = 0;
-                    audio.play();
-                    audio.onended = () => resolve();
-                });
-            }
+          function playSegmentAudio(segName) {
+    return new Promise((resolve) => {
+        const src = voiceAudioMap[segName];
+        if (!src) {
+            showError(`❌ 找不到音檔對應：${segName}`);
+            resolve();
+            return;
+        }
+
+        const audio = new Audio(src);
+
+        // 🔊 套用音量 & 播放設定
+        audio.volume = voiceVolume / 10;  // 保留你的音量設定
+        audio.currentTime = 0;            // 從頭播放
+
+        // 播放結束 → 繼續流程
+        audio.onended = () => {
+            resolve();
+        };
+
+        // 播放錯誤 → 不要卡住
+        audio.onerror = () => {
+            showError(`⚠️ 音檔載入失敗：${segName}`);
+            resolve();
+        };
+
+        // Safari 常見錯誤：被禁止自動播放
+        audio.play().catch((err) => {
+            showError(`🚫 播放失敗：${segName} (${err.message})`);
+            resolve();
+        });
+    });
+}
 
             async function runTimer() {
                 running = true; paused = false; stopRequested = false; skipFlag = false;
@@ -493,5 +521,7 @@
             loadVolumeConfig();
         })();
     </script>
+    <pre id="errorBox" style="color:red; font-size:14px; white-space:pre-wrap;"></pre>
 </body>
 </html>
+
