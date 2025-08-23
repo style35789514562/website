@@ -313,6 +313,14 @@
                 }
             }
             buildPartInputs();
+            function unlockAudio() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buffer = audioCtx.createBuffer(1, 1, 22050);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+}
 
             function readConfig() {
                 const reps = Math.max(1, Math.floor(Number(inputReps.value) || 1));
@@ -445,6 +453,7 @@ function playSegmentAudio(name) {
             startBtn.addEventListener('click', () => {
                 pageSetup.classList.remove('active');
                 pageRun.classList.add('active');
+                 unlockAudio();
                 runTimer();
             });
             pauseBtn.addEventListener('click', () => { paused = !paused; pauseBtn.textContent = paused ? '繼續' : '暫停'; });
@@ -520,5 +529,6 @@ function playSegmentAudio(name) {
     <pre id="errorBox" style="color:red; font-size:14px; white-space:pre-wrap;"></pre>
 </body>
 </html>
+
 
 
